@@ -38,33 +38,13 @@ Config spec:
 ...
 """
 
-
-class TemplateConfig:
-    # just for show 
-    experiment_class = experiments.BaseExp
-    val_freq = 200000
-    num_classes = None
-    train_csv_file_path = None
-    train_images_dir_path = None
-    val_csv_file_path = None
-    val_images_dir_path = None
-    test_csv_file_path = None
-    test_images_dir_path = None
-    train_batch_size = None
-    val_batch_size = None
-
-
 class BaseConfig:
     # ... 
     experiment_class = experiments.BaseExp
-    val_freq = 200000
+    val_freq = 2
     num_classes = None
-    train_csv_file_path = "../../../data/playground/filtered_observations.csv"
-    train_images_dir_path = "../../../data/playground/images"
-    val_csv_file_path = "../../../data/playground/filtered_observations.csv"
-    val_images_dir_path = "../../../data/playground/images"
-    test_csv_file_path = "../../../data/playground/filtered_observations.csv"
-    test_images_dir_path = "../../../data/playground/images"
-    train_batch_size = 1
-    val_batch_size = 1
+    csv_file_path = None
+    images_dir_path = None
+    train_batch_size = None
+    val_batch_size = None
     

@@ -29,15 +29,12 @@ class INaturalistClassification(Dataset):
         self.df = pd.read_csv(csv_file_path)
 
         # TODO: sift out non-research grade observations. 
-        # self.df = self.df[self.df['Quality_grade'] == 'research']
-
-        # TODO: need to edit this to ensure species level classification labels. 
 
         # Create a mapping from image name to numeric label and add this as a column to the df 
-        
+        # TODO: need to edit this to ensure species level classification labels. 
         self.label_map = {}  
-        self.unique_labels = self.df['name'].unique()  
-        for i, label in enumerate(self.unique_labels):
+        unique_labels = self.df['name'].unique()  
+        for i, label in enumerate(unique_labels):
             self.label_map[label] = i  
             
         self.df['label'] = self.df['name'].map(self.label_map)
@@ -60,30 +57,18 @@ class INaturalistClassification(Dataset):
         # image
         img_name = str(self.df.loc[idx, 'photo_id'])
 
-        # # if extension column is not present, then default to png? 
-        # if 'extension' not in self.df.columns:
-        #     extension_str = "png"
-        #     print("(for debugging purposes) Warning: extension column not present in csv file. Defaulting to png")
-        # else:
-        #     extension_str = str(self.df.loc[idx, 'extension'])
-        
-        # temporay since it seems that all the images are png despite mismatching extension 
-        extension_str = "png"
-
+        # if extension column is not present, then default to png? 
+        if 'extension' not in self.df.columns:
+            extension_str = "png"
+        else:
+            extension_str = str(self.df.loc[idx, 'extension'])
         suffix_path = img_name[:3] + '/' + img_name + "." + extension_str
         img_path = os.path.join(self.images_dir, suffix_path)
         
         try:
           image_array = ml.load_image(img_path, resize=None, normalize=True)
         except:
-          print("The current image path does not point to a valid file...., skipping")
-          return torch.tensor(-1), torch.tensor(-1)
-          # raise Exception("The current image path does not point to a valid file")
-        
-
-        # tensorize 
-        image_array = torch.tensor(image_array, dtype=torch.float32)
-        label = torch.tensor(label)
+          raise Exception("The current image path does not point to a valid file")
 
         return image_array, label
     

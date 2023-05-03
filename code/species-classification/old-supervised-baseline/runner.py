@@ -14,8 +14,8 @@ the config class name specifies the experiment you are running and the parameter
 import argparse
 import warnings
 import pdb 
-import configs
 import experiments
+import configs
 
 
 def main(args):
@@ -34,8 +34,12 @@ def main(args):
         model_checkpoint_ = None
 
     # load experiment 
-    assert cfg.experiment_class is not None, "Must specify experiment class in config."
-    exp = cfg.experiment_class(cfg, model_checkpoint = model_checkpoint_)
+    if args.experiment is None:
+        exp_class = 'BaseExp'
+    else:
+        exp_class = args.experiment
+    exp_class = getattr(experiments, exp_class)
+    exp = exp_class(cfg, model_checkpoint = model_checkpoint_)
 
 	# train the model
     if args.train:
@@ -55,7 +59,7 @@ if __name__ == '__main__':
     parser.add_argument("-experiment", type=str, help='specify experiment.py class to use.') 
     parser.add_argument("-config", type=str, help='specify config.py class to use.') 
     parser.add_argument('-train', action='store_true', help='Do you want to train the model?', default=True)
-    parser.add_argument('-test', action='store_true', help='Do you want to test the model?', default=False)
+    parser.add_argument('-test', action='store_true', help='Do you want to test the model?', default=True)
     parser.add_argument("-checkpoint", type=str, help='Optionally specify model checkpoint to start with.') 
     parser.add_argument('-num_epochs', type=int, help='Number of epochs to train for.', default=10)
     parser.add_argument('-grad_accum', type=int, help='Number of gradient accumulations per batch.', default=1)

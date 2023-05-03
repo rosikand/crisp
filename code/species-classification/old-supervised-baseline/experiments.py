@@ -23,14 +23,12 @@ import torch.optim as optim
 import torch.nn.functional as F
 import datasets
 import torchvision
-import pdb
 import configs
 from tqdm import tqdm
-import train
 
 
 
-class BaseExp(train.Trainer):
+class BaseExp(experiment.Experiment):
     """
     Base experiment class. Simple supervised classification. 
     ---
@@ -39,49 +37,31 @@ class BaseExp(train.Trainer):
     - Optimizer: Adam 
     """
     
-    def __init__(self, config=None, model_checkpoint=None):
+    def __init__(self, config=None):
         self.cfg = config
         if self.cfg is None:
             self.cfg = configs.BaseConfig()
-        
-        
+        self.model = self.construct_model(pretrained=True, num_classes=self.cfg.num_classes)
+        self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
+        self.criterion = nn.CrossEntropyLoss()
 
-        # data loading stuff 
+        # data loading 
         self.train_ds = datasets.INaturalistClassification(
-            csv_file_path=self.cfg.train_csv_file_path, 
-            images_dir_path=self.cfg.train_images_dir_path
+            csv_file_path=self.cfg.csv_file_path, 
+            images_dir_path=self.cfg.images_dir_path
             )
         self.val_ds = datasets.INaturalistClassification(
-            csv_file_path=self.cfg.val_csv_file_path, 
-            images_dir_path=self.cfg.val_images_dir_path
+            csv_file_path=self.cfg.csv_file_path, 
+            images_dir_path=self.cfg.images_dir_path
             )
         self.test_ds = datasets.INaturalistClassification(
-            csv_file_path=self.cfg.test_csv_file_path, 
-            images_dir_path=self.cfg.test_images_dir_path
+            csv_file_path=self.cfg.csv_file_path, 
+            images_dir_path=self.cfg.images_dir_path
             )
         
-
         self.trainloader = torch.utils.data.DataLoader(self.train_ds, batch_size=self.cfg.train_batch_size, shuffle=True)
         self.valloader = torch.utils.data.DataLoader(self.val_ds, batch_size=self.cfg.val_batch_size, shuffle=True)
         self.testloader = torch.utils.data.DataLoader(self.test_ds, batch_size=1, shuffle=False)
-        
-
-        # model init stuff 
-        
-        self.num_classes = self.cfg.num_classes
-        if self.num_classes is None:
-            # placeholder for the time being. 
-            self.num_classes = len(self.train_ds.unique_labels)
-
-        self.model = self.construct_model(weights=None, num_classes=self.num_classes)
-
-        if model_checkpoint is not None:
-            self.load_weights(model_checkpoint)
-
-        
-        self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
-        self.criterion = nn.CrossEntropyLoss()
-        
         
 
         super().__init__(
@@ -93,8 +73,8 @@ class BaseExp(train.Trainer):
         )
     
 
-    def construct_model(self, weights=None, num_classes=2):
-        model = torchvision.models.resnet50(weights=weights)
+    def construct_model(self, pretrained=True, num_classes=2):
+        model = torchvision.models.resnet50(pretrained=pretrained)
         d = model.fc.in_features
         model.fc = nn.Linear(d, num_classes)
         return model
@@ -106,13 +86,7 @@ class BaseExp(train.Trainer):
         # batch will be of form 
         # (x, y)
 
-
         x, y = batch
-
-        if x.eq(-1).all().item() and y.eq(-1).all().item():
-            print("Skipped batch...")
-            return None
-        
         logits = self.model(x)
         loss_val = self.criterion(logits, y)
         acc = tp_metrics.calculate_accuracy(logits, y)
@@ -183,5 +157,5 @@ class MLPExp(BaseExp):
         input_shape_ = self.train_ds[0][0].shape
         self.model = models.MLP(
             input_shape=input_shape_, 
-            num_classes=self.num_classes
+            num_classes=self.cfg.num_classes
             )
