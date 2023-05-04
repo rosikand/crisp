@@ -97,6 +97,10 @@ class BaseExp(train.Trainer):
         
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
         self.criterion = nn.CrossEntropyLoss()
+
+        # extra stuff 
+        self.num_to_validate = self.cfg.num_to_validate
+        self.num_to_test = self.cfg.num_to_test
         
         
 
@@ -169,9 +173,11 @@ class BaseExp(train.Trainer):
         i = 0
         for batch in tqdm_loader:
             i += 1
+            if i > self.num_to_validate:
+                break
             x, y = batch
             if self.is_negative(x, y):
-                print("Data file not found, skipping batch...")
+                # print("Data file not found, skipping batch...")
                 continue
             x = x.to(self.device)
             y = y.to(self.device)
@@ -191,9 +197,11 @@ class BaseExp(train.Trainer):
         i = 0
         for batch in tqdm_loader:
             i += 1
+            if i > self.num_to_test:
+                break
             x, y = batch
             if self.is_negative(x, y):
-                print("Data file not found, skipping batch...")
+                # print("Data file not found, skipping batch...")
                 continue
             x = x.to(self.device)
             y = y.to(self.device)
