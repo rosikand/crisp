@@ -1,0 +1,1 @@
+The current dataset we have in google drive is 10% of the entire dataset. For this reason, we need to edit the dataframes that contain the image paths to only include the image paths we have access to. This directory contains the original dataframes and a script to do this processing. 

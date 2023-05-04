@@ -19,6 +19,8 @@ import experiments
 
 
 def main(args):
+    print("Initializing run...")
+
     # load config 
     if args.config is None:
         config_class = 'BaseConfig'
@@ -39,10 +41,12 @@ def main(args):
 
 	# train the model
     if args.train:
-        exp.train(args.num_epochs, gradient_accumulate_every_n_batches=args.grad_accum, display_batch_loss=args.display_batch_loss)
+        print("Beginning training...")
+        exp.train(args.num_epochs, gradient_accumulate_every_n_batches=args.grad_accum, max_num_batches_per_epoch=args.max_batches, display_batch_loss=args.display_batch_loss)
     
     # test the model
     if args.test:
+        print("Beginning testing...")
         exp.test()
 
 
@@ -52,12 +56,12 @@ if __name__ == '__main__':
     # python runner.py -e BaseExp -c BaseConfig -train -test -num_epochs 10 -grad_accum 1
     # configure args 
     parser = argparse.ArgumentParser(description="specify cli arguments.", allow_abbrev=True)
-    parser.add_argument("-experiment", type=str, help='specify experiment.py class to use.') 
     parser.add_argument("-config", type=str, help='specify config.py class to use.') 
     parser.add_argument('-train', action='store_true', help='Do you want to train the model?', default=True)
     parser.add_argument('-test', action='store_true', help='Do you want to test the model?', default=False)
     parser.add_argument("-checkpoint", type=str, help='Optionally specify model checkpoint to start with.') 
     parser.add_argument('-num_epochs', type=int, help='Number of epochs to train for.', default=10)
+    parser.add_argument('-max_batches', type=int, help='Maximum number of batches to train on per epoch.', default=-1)
     parser.add_argument('-grad_accum', type=int, help='Number of gradient accumulations per batch.', default=1)
     parser.add_argument('-display_batch_loss', action='store_true', help='Display batch loss during training at each step.', default=True)
     args = parser.parse_args()

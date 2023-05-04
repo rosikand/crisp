@@ -52,11 +52,27 @@ class TemplateConfig:
     test_images_dir_path = None
     train_batch_size = None
     val_batch_size = None
+    device = None
 
 
 class BaseConfig:
     # ... 
     experiment_class = experiments.BaseExp
+    val_freq = 1
+    num_classes = None
+    train_csv_file_path = "../../../data/playground/filtered_observations.csv"
+    train_images_dir_path = "../../../data/playground/images"
+    val_csv_file_path = "../../../data/playground/filtered_observations.csv"
+    val_images_dir_path = "../../../data/playground/images"
+    test_csv_file_path = "../../../data/playground/filtered_observations.csv"
+    test_images_dir_path = "../../../data/playground/images"
+    train_batch_size = 1
+    val_batch_size = 1
+    device = None
+
+class BaseConfigMLP:
+    # ... 
+    experiment_class = experiments.MLPExp
     val_freq = 200000
     num_classes = None
     train_csv_file_path = "../../../data/playground/filtered_observations.csv"
@@ -67,4 +83,37 @@ class BaseConfig:
     test_images_dir_path = "../../../data/playground/images"
     train_batch_size = 1
     val_batch_size = 1
+    device = None
+
+
+class ColabProConfig:
+    # ... 
+    experiment_class = experiments.BaseExp
+    val_freq = 1
+    num_classes = None
+    train_csv_file_path = "/content/drive/MyDrive/CS 197 Research Team 3/colab/filtered_train_observations.csv"
+    train_images_dir_path = "/content/drive/MyDrive/CS 197 Research Team 3/data/train/images"
+    val_csv_file_path = "/content/drive/MyDrive/CS 197 Research Team 3/colab/filtered_validation_observations.csv"
+    val_images_dir_path = "/content/drive/MyDrive/CS 197 Research Team 3/validation/validation/images"
+    test_csv_file_path = "/content/drive/MyDrive/CS 197 Research Team 3/colab/filtered_test_observations.csv"
+    test_images_dir_path = "/content/drive/MyDrive/CS 197 Research Team 3/data/test/images"
+    train_batch_size = 1
+    val_batch_size = 1
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
+
+class ColabProConfigMLP:
+    # ... 
+    experiment_class = experiments.MLPExp
+    val_freq = 1
+    num_classes = None
+    train_csv_file_path = "/content/drive/MyDrive/CS 197 Research Team 3/colab/filtered_train_observations.csv"
+    train_images_dir_path = "/content/drive/MyDrive/CS 197 Research Team 3/data/train/images"
+    val_csv_file_path = "/content/drive/MyDrive/CS 197 Research Team 3/colab/filtered_validation_observations.csv"
+    val_images_dir_path = "/content/drive/MyDrive/CS 197 Research Team 3/validation/validation/images"
+    test_csv_file_path = "/content/drive/MyDrive/CS 197 Research Team 3/colab/filtered_test_observations.csv"
+    test_images_dir_path = "/content/drive/MyDrive/CS 197 Research Team 3/data/test/images"
+    train_batch_size = 1
+    val_batch_size = 1
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     

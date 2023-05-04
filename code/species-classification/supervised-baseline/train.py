@@ -52,7 +52,7 @@ class Trainer(ABC):
         assert type(self.experiment_name) is str, "experiment name must be a string"
 
 
-    def train(self, num_epochs, gradient_accumulate_every_n_batches=1, display_batch_loss=False):
+    def train(self, num_epochs, gradient_accumulate_every_n_batches=1, max_num_batches_per_epoch=-1, display_batch_loss=False):
         """
         Training loop. Can optionally specify how often to accumulate gradients. Default: 1. 
         """
@@ -74,8 +74,15 @@ class Trainer(ABC):
             batch_idx = -1
             for batch in tqdm_loader:
                 batch_idx += 1
+
+                # allow early breaking to test things out (i.e., only run n batches per epoch)
+                if max_num_batches_per_epoch != -1:
+                    if (batch_idx + 1) % max_num_batches_per_epoch == 0:
+                        print(f"Breaking early at batch {batch_idx + 1}, as specified.")
+                        break
                 if not display_batch_loss:
                     tqdm_loader.set_description(f"Epoch {self.epoch_num}")
+
                 self.on_batch_start()
                 
                 evals = self.evaluate(batch)

@@ -37,6 +37,7 @@ class INaturalistClassification(Dataset):
         
         self.label_map = {}  
         self.unique_labels = self.df['name'].unique()  
+        print(f"Initializing dataset... num unique labels is {len(self.unique_labels)}")
         for i, label in enumerate(self.unique_labels):
             self.label_map[label] = i  
             
@@ -76,7 +77,7 @@ class INaturalistClassification(Dataset):
         try:
           image_array = ml.load_image(img_path, resize=None, normalize=True)
         except:
-          print("The current image path does not point to a valid file...., skipping")
+          print(f"The current image path ({img_path}) does not point to a valid file...., skipping")
           return torch.tensor(-1), torch.tensor(-1)
           # raise Exception("The current image path does not point to a valid file")
         

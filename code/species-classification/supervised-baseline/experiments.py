@@ -40,21 +40,32 @@ class BaseExp(train.Trainer):
     """
     
     def __init__(self, config=None, model_checkpoint=None):
+        print("Initializing experiment...")
         self.cfg = config
         if self.cfg is None:
             self.cfg = configs.BaseConfig()
+
+        
+        self.device = self.cfg.device
+        if self.device is None:
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
+
+        print(f"Using device: {self.device}")
         
         
 
         # data loading stuff 
+        print("Initializing train dataset")
         self.train_ds = datasets.INaturalistClassification(
             csv_file_path=self.cfg.train_csv_file_path, 
             images_dir_path=self.cfg.train_images_dir_path
             )
+        print("Initializing validation dataset")
         self.val_ds = datasets.INaturalistClassification(
             csv_file_path=self.cfg.val_csv_file_path, 
             images_dir_path=self.cfg.val_images_dir_path
             )
+        print("Initializing test dataset")
         self.test_ds = datasets.INaturalistClassification(
             csv_file_path=self.cfg.test_csv_file_path, 
             images_dir_path=self.cfg.test_images_dir_path
@@ -65,6 +76,9 @@ class BaseExp(train.Trainer):
         self.valloader = torch.utils.data.DataLoader(self.val_ds, batch_size=self.cfg.val_batch_size, shuffle=True)
         self.testloader = torch.utils.data.DataLoader(self.test_ds, batch_size=1, shuffle=False)
         
+        print(f"Length of training dataset: {len(self.trainloader)}")
+        print(f"Length of val dataset: {len(self.valloader)}")
+        print(f"Length of test dataset: {len(self.testloader)}")
 
         # model init stuff 
         
@@ -74,6 +88,8 @@ class BaseExp(train.Trainer):
             self.num_classes = len(self.train_ds.unique_labels)
 
         self.model = self.construct_model(weights=None, num_classes=self.num_classes)
+
+        self.model.to(self.device)
 
         if model_checkpoint is not None:
             self.load_weights(model_checkpoint)
@@ -94,10 +110,28 @@ class BaseExp(train.Trainer):
     
 
     def construct_model(self, weights=None, num_classes=2):
+        print(f"Initializing model with {self.num_classes} num classes")
         model = torchvision.models.resnet50(weights=weights)
         d = model.fc.in_features
         model.fc = nn.Linear(d, num_classes)
         return model
+    
+
+    def is_negative(self, x, y):
+        # if x or y is -1, return None
+        x_neg = False
+        y_neg = False
+        for sample in x:
+            if sample.eq(-1).all().item():
+                x_neg = True
+                break
+        
+        for sample in y:
+            if sample.eq(-1).all().item():
+                y_neg = True
+                break
+
+        return x_neg and y_neg
     
 
     # provide this abstract method (any subclass of torchplate.Experiment class must provide this) 
@@ -108,10 +142,15 @@ class BaseExp(train.Trainer):
 
 
         x, y = batch
+        x = x.to(self.device)
+        y = y.to(self.device)
 
-        if x.eq(-1).all().item() and y.eq(-1).all().item():
-            print("Skipped batch...")
+        if self.is_negative(x, y):
             return None
+
+        # if x.eq(-1).all().item() and y.eq(-1).all().item():
+        #    # print("Data file not found, skipping batch...")
+        #     return None
         
         logits = self.model(x)
         loss_val = self.criterion(logits, y)
@@ -131,12 +170,18 @@ class BaseExp(train.Trainer):
         for batch in tqdm_loader:
             i += 1
             x, y = batch
+            if self.is_negative(x, y):
+                print("Data file not found, skipping batch...")
+                continue
+            x = x.to(self.device)
+            y = y.to(self.device)
             logits = self.model(x)
             acc.update(logits, y)
             tqdm_loader.set_description(f'Accuracy: {acc.get()}')
 
         
         print(f'Validation accuracy: {acc.get()}')
+
 
     
     def test(self):
@@ -147,6 +192,11 @@ class BaseExp(train.Trainer):
         for batch in tqdm_loader:
             i += 1
             x, y = batch
+            if self.is_negative(x, y):
+                print("Data file not found, skipping batch...")
+                continue
+            x = x.to(self.device)
+            y = y.to(self.device)
             logits = self.model(x)
             acc.update(logits, y)
             tqdm_loader.set_description(f'Accuracy: {acc.get()}')
@@ -166,6 +216,10 @@ class BaseExp(train.Trainer):
             self.validate()
 
 
+    def on_run_end(self):
+        self.save_weights()
+
+
 
 class MLPExp(BaseExp):
     """
@@ -176,8 +230,10 @@ class MLPExp(BaseExp):
     ---
     model: MLP
     """
-    def __init__(self, config=None):
-        super().__init__(config=config)
+    def __init__(self, config=None,  model_checkpoint=None):
+        super().__init__(config=config, model_checkpoint=model_checkpoint)
+
+        print("Initializing MLP experiment...")
 
         # input shape is 
         input_shape_ = self.train_ds[0][0].shape
@@ -185,3 +241,4 @@ class MLPExp(BaseExp):
             input_shape=input_shape_, 
             num_classes=self.num_classes
             )
+        self.model.to(self.device)
