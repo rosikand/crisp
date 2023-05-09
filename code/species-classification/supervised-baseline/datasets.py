@@ -42,6 +42,8 @@ class INaturalistClassification(Dataset):
             self.label_map[label] = i  
             
         self.df['label'] = self.df['name'].map(self.label_map)
+
+        self.default_img_shape = (3, 224, 224)
         
 
     def __len__(self):
@@ -78,7 +80,7 @@ class INaturalistClassification(Dataset):
           image_array = ml.load_image(img_path, resize=None, normalize=True)
         except:
           print(f"The current image path ({img_path}) does not point to a valid file...., skipping")
-          return torch.tensor(-1), torch.tensor(-1)
+          return torch.zeros(self.default_image_shape).fill_(-1), torch.tensor(-1)
           # raise Exception("The current image path does not point to a valid file")
         
 

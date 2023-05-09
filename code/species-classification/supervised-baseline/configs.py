@@ -104,6 +104,24 @@ class ColabProConfig:
     num_to_test = 10
     
 
+class LongTrain:
+    # same as ColabProConfig but designed for full training 
+    experiment_class = experiments.BaseExp
+    val_freq = 1
+    num_classes = None
+    train_csv_file_path = "/content/drive/MyDrive/CS 197 Research Team 3/colab/filtered_train_observations.csv"
+    train_images_dir_path = "/content/drive/MyDrive/CS 197 Research Team 3/data/train/images"
+    val_csv_file_path = "/content/drive/MyDrive/CS 197 Research Team 3/colab/filtered_validation_observations.csv"
+    val_images_dir_path = "/content/drive/MyDrive/CS 197 Research Team 3/data/validation/images"
+    test_csv_file_path = "/content/drive/MyDrive/CS 197 Research Team 3/colab/filtered_test_observations.csv"
+    test_images_dir_path = "/content/drive/MyDrive/CS 197 Research Team 3/data/test/images"
+    train_batch_size = 64
+    val_batch_size = 1
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    num_to_validate = 10000000
+    num_to_test = 100000000 
+    
+
 # class ColabProConfigMLP:
 #     # ... 
 #     experiment_class = experiments.MLPExp

@@ -4,6 +4,9 @@ File: train.py
 Provides a trainer module for training pytorch models. 
 Adapted directly from my package torchplate: 
 https://github.com/rosikand/torchplate/blob/main/src/torchplate/experiment.py
+
+To see why implementing a trainer class is useful, see 
+https://uvadlc-notebooks.readthedocs.io/en/latest/tutorial_notebooks/guide4/Research_Projects_with_JAX.html. 
 """
 
 from abc import ABC, abstractmethod

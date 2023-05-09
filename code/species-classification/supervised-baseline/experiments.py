@@ -40,7 +40,7 @@ class BaseExp(train.Trainer):
     """
     
     def __init__(self, config=None, model_checkpoint=None):
-        print("Initializing experiment...")
+        print("Initializing base experiment...")
         self.cfg = config
         if self.cfg is None:
             self.cfg = configs.BaseConfig()
@@ -101,6 +101,10 @@ class BaseExp(train.Trainer):
         # extra stuff 
         self.num_to_validate = self.cfg.num_to_validate
         self.num_to_test = self.cfg.num_to_test
+
+        self.num_missed_dur_train = 0
+        self.num_missed_dur_val = 0
+        self.num_missed_dur_test = 0
         
         
 
@@ -150,6 +154,8 @@ class BaseExp(train.Trainer):
         y = y.to(self.device)
 
         if self.is_negative(x, y):
+            print("Train data point file not found, skipping batch...")
+            self.num_missed_dur_train += 1
             return None
 
         # if x.eq(-1).all().item() and y.eq(-1).all().item():
@@ -177,7 +183,8 @@ class BaseExp(train.Trainer):
                 break
             x, y = batch
             if self.is_negative(x, y):
-                # print("Data file not found, skipping batch...")
+                print("Val data file not found, skipping batch...")
+                self.num_missed_dur_val += 1
                 continue
             x = x.to(self.device)
             y = y.to(self.device)
@@ -201,7 +208,8 @@ class BaseExp(train.Trainer):
                 break
             x, y = batch
             if self.is_negative(x, y):
-                # print("Data file not found, skipping batch...")
+                print("Test data file not found, skipping batch...")
+                self.num_missed_dur_test += 1
                 continue
             x = x.to(self.device)
             y = y.to(self.device)
@@ -226,6 +234,11 @@ class BaseExp(train.Trainer):
 
     def on_run_end(self):
         self.save_weights()
+        print("-------- (Training complete!) --------")
+        print(f"Number of missed train batches: {self.num_missed_dur_train}")
+        print(f"Number of missed val batches: {self.num_missed_dur_val}")
+        print(f"Number of missed test batches: {self.num_missed_dur_test}")
+        print("--------------------------------------")
 
 
 
