@@ -29,3 +29,5 @@ Some insight into the labels:
 <p align='center'>
     <img alt="picture 1" src="https://cdn.jsdelivr.net/gh/minimatest/vscode-images@main/images/81d12243cb2ae3a20143d9d255f7ac8e07692724ea52aa6761d2e42e6be86562.png" width="500" />  
 </p>
+
+Basically, get the 10x10 matrix which is just dot products normalized (which is the same as cosine similarity). This will produce [batch_size, 10] shape logits. Now we want to essentially “predict” which cosine sim score is a positive pair (i.e., positive cosine sim consists of the dot product between matching ground level and remote sensing image and negative is non-matching dot product). Thus, the loss is cross entropy which will maximize the cosine sim scores where i ==j (diagonal, like we had discussed)  and minimize the rest which will lead to matching pairs being close together in the 512-dim latent space. 
