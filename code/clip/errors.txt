@@ -1,0 +1,3 @@
+- Fix ability to use bigger batch size 
+- Talk to lauren about what the various files in each corresponding .npz file means. 
+- Potentially filter remote sensing data 

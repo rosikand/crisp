@@ -15,37 +15,24 @@ import pandas as pd
 import numpy as np
 import rsbox  # custom package I wrote to handle some common ML tasks such as loading images into (C, H, W) form. 
 from rsbox import ml
+import pdb
+import os
 
 
 
-class INaturalistClassification(Dataset):
-    def __init__(self, csv_file_path, images_dir_path):
+class CrispDataset(Dataset):
+    def __init__(self, csv_file_path, images_dir_path, remote_sensing_dir_path):
         """
         Initialize the dataset by reading the csv file and creating a mapping from image name to label. 
         Args:
         - csv_file_path (string): path to csv file
         - images_dir_path (string): path to directory with all the images 
+        - remote_sensing_dir_path (string): path to directory with all the remote sensing images
         """
         self.csv_file = csv_file_path
         self.images_dir = images_dir_path
+        self.remote_sensing_dir = remote_sensing_dir_path
         self.df = pd.read_csv(csv_file_path)
-
-        # TODO: sift out non-research grade observations. 
-        # self.df = self.df[self.df['Quality_grade'] == 'research']
-
-        # TODO: need to edit this to ensure species level classification labels. 
-
-        # Create a mapping from image name to numeric label and add this as a column to the df 
-        
-        self.label_map = {}  
-        self.unique_labels = self.df['name'].unique()  
-        print(f"Initializing dataset... num unique labels is {len(self.unique_labels)}")
-        for i, label in enumerate(self.unique_labels):
-            self.label_map[label] = i  
-            
-        self.df['label'] = self.df['name'].map(self.label_map)
-
-        self.default_img_shape = (3, 224, 224)
         
 
     def __len__(self):
@@ -58,37 +45,64 @@ class INaturalistClassification(Dataset):
         """
         Return the image and label at the given index. 
         """
-        
-        # label 
-        label = self.df.loc[idx, 'label']
 
-        # image
+        # ground level image 
+        
         img_name = str(self.df.loc[idx, 'photo_id'])
-
-        # # if extension column is not present, then default to png? 
-        # if 'extension' not in self.df.columns:
-        #     extension_str = "png"
-        #     print("(for debugging purposes) Warning: extension column not present in csv file. Defaulting to png")
-        # else:
-        #     extension_str = str(self.df.loc[idx, 'extension'])
-        
-        # temporay since it seems that all the images are png despite mismatching extension 
-        extension_str = "png"
-
+        extension_str = str(self.df.loc[idx, 'extension'])
         suffix_path = img_name[:3] + '/' + img_name + "." + extension_str
         img_path = os.path.join(self.images_dir, suffix_path)
-        
+
         try:
           image_array = ml.load_image(img_path, resize=None, normalize=True)
         except:
-          print(f"The current image path ({img_path}) does not point to a valid file...., skipping")
-          return torch.zeros(self.default_image_shape).fill_(-1), torch.tensor(-1)
-          # raise Exception("The current image path does not point to a valid file")
+          suffix_path = img_name[:3] + '/' + img_name + "." + "png"
+          img_path = os.path.join(self.images_dir, suffix_path)
+          try:
+            image_array = ml.load_image(img_path, resize=None, normalize=True)
+          except: 
+            image_array = torch.randn(3, 256, 256)
+
+        gl_img = image_array
+
+        
+        # remote sensing image
+        remote_sensing_img_name = str(self.df.loc[idx, 'remote_sensing'])
+        rs_path = os.path.join(self.remote_sensing_dir, remote_sensing_img_name)
+
+        try:
+          rs_img_obj = np.load(rs_path)
+          rs_files = rs_img_obj.files
+          rs_img = rs_img_obj[rs_files[0]]
+          rs_img = rs_img[:3,:,:]  # (4, 256, 256) -- > (3, 256, 256)
+        except:
+          # generate random remote sensing image
+          rs_img = torch.randn(3, 256, 256)
+          # raise Exception("remote sensing image not found")
+        
         
 
-        # tensorize 
-        image_array = torch.tensor(image_array, dtype=torch.float32)
-        label = torch.tensor(label)
+        # (3, 170, 247), (3, 256, 256)
+        return (gl_img, rs_img)    
 
-        return image_array, label
-    
+
+
+base_path = "../../data/may17data"
+csv_path = os.path.join(base_path, "filtered.csv")
+images_dir_path = os.path.join(base_path, "images")
+remote_sensing_dir_path = os.path.join(base_path, "remote_sensing")
+
+ds = CrispDataset(csv_path, images_dir_path, remote_sensing_dir_path)
+
+
+# dataloader 
+dataloader = torch.utils.data.DataLoader(ds, batch_size=1, shuffle=False)
+
+# for batch in dataloader:
+#   gl, rs = batch
+#   pdb.set_trace()
+
+# _ = ds[5]
+
+# pdb.set_trace()
+

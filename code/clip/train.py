@@ -19,37 +19,82 @@ import torch.nn.functional as F
 import torchvision
 import pdb
 from rsbox import ml, misc
+import datasets 
 
 
-"""
-File: experiments.py
-------------------
-This file holds the experiments which are
-subclasses of torchplate.experiment.Experiment. 
-torchplate is a small python package I wrote which
-handles the training loop and various other utilities
-such as logging, checkpointing, etc. 
-"""
 
-import numpy as np
-import torchplate
-from torchplate import (
-        experiment,
-        utils
-    )
-from torchplate import metrics as tp_metrics
-import models
-import wandb
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
-import datasets
-import torchvision
-import pdb
-import configs
-from tqdm import tqdm
-import train
+
+class CrispExperiment(torchplate.experiment.Experiment):
+    """
+    Base crisp experiment class which inherits from torchplate.experiment.Experiment.  
+    """
+    
+    def __init__(self, model_checkpoint=None):
+        print("Initializing base crisp experiment...")
+
+        # vars 
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
+        print(f"Using device: {self.device}")
+        
+        # data loading stuff 
+        print("Initializing train dataset")
+        self.train_ds = datasets.INaturalistClassification(
+            csv_file_path=self.cfg.train_csv_file_path, 
+            images_dir_path=self.cfg.train_images_dir_path
+            )
+        print("Initializing validation dataset")
+        self.val_ds = datasets.INaturalistClassification(
+            csv_file_path=self.cfg.val_csv_file_path, 
+            images_dir_path=self.cfg.val_images_dir_path
+            )
+        print("Initializing test dataset")
+        self.test_ds = datasets.INaturalistClassification(
+            csv_file_path=self.cfg.test_csv_file_path, 
+            images_dir_path=self.cfg.test_images_dir_path
+            )
+        
+
+        self.trainloader = torch.utils.data.DataLoader(self.train_ds, batch_size=self.cfg.train_batch_size, shuffle=True)
+        self.valloader = torch.utils.data.DataLoader(self.val_ds, batch_size=self.cfg.val_batch_size, shuffle=True)
+        self.testloader = torch.utils.data.DataLoader(self.test_ds, batch_size=1, shuffle=False)
+        
+        print(f"Length of training dataset: {len(self.trainloader)}")
+        print(f"Length of val dataset: {len(self.valloader)}")
+        print(f"Length of test dataset: {len(self.testloader)}")
+
+        # model init stuff 
+        self.model = crisp.CrispModel(
+            encoder_name = "resnet50",
+            embedding_dim = 512,  # eventually put all this in cfg. 
+            pretrained_weights = None
+        )
+        self.model.to(self.device)
+
+        if model_checkpoint is not None:
+            self.load_weights(model_checkpoint)
+
+        
+        self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
+        self.criterion = crisp.ClipLoss()
+
+        # extra stuff 
+        self.num_to_validate = self.cfg.num_to_validate
+        self.num_to_test = self.cfg.num_to_test
+
+        self.num_missed_dur_train = 0
+        self.num_missed_dur_val = 0
+        self.num_missed_dur_test = 0
+
+        super().__init__(
+            model = self.model,
+            optimizer = self.optimizer,
+            trainloader = self.trainloader,
+            save_weights_every_n_epochs = None, 
+            wandb_logger = None,
+            verbose = True,
+            experiment_name = misc.timestamp()
+        )
+
 
 
 
@@ -150,12 +195,7 @@ class CrispExperiment(torchplate.experiment.Experiment):
         return x_neg and y_neg
     
 
-    # provide this abstract method (any subclass of torchplate.Experiment class must provide this) 
-    # to calculate loss and optionally, other metrics to print over the course of training. 
     def evaluate(self, batch):
-        # batch will be of form 
-        # (x, y)
-
 
         x, y = batch
         x = x.to(self.device)
