@@ -46,8 +46,8 @@ import pdb
 # show that crisp implementation functions correctly 
 
 # batches 
-gr_batch = torch.randn(10, 3, 128, 128)
-rs_batch = torch.randn(10, 3, 224, 224)
+gr_batch = torch.randn(1, 3, 128, 128)
+rs_batch = torch.randn(1, 3, 224, 224)
 
 model = crisp.CrispModel(
     encoder_name = "resnet50",

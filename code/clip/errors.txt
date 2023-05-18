@@ -1,3 +1,7 @@
 - Fix ability to use bigger batch size 
 - Talk to lauren about what the various files in each corresponding .npz file means. 
 - Potentially filter remote sensing data 
+- Another thing to note: the loss will always be 0 if the batch size is 1 because the crisp loss operates based on a batch (i.e., the matrix diagram is based on a 10-batch). If the batch size is 1, then there only exists one positive pair. 
+- Ok I realized the batch size error: each ground level image in the batch must be the same shape otherwise we can't properly form the batch tensor. 
+    - Error: "RuntimeError: stack expects each tensor to be equal size, but got [3, 240, 180] at entry 0 and [3, 240, 172] at entry 5"  
+    - Solution: resize the ground level images to be the same size. Alternatively, center crop to avoid down-resolution scaling. 
