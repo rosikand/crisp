@@ -21,18 +21,20 @@ import crisp
 
 
 class CrispDataset(Dataset):
-    def __init__(self, csv_file_path, images_dir_path, remote_sensing_dir_path):
+    def __init__(self, csv_file_path, images_dir_path, remote_sensing_dir_path, data_split="train"):
         """
         Initialize the dataset by reading the csv file and creating a mapping from image name to label. 
         Args:
         - csv_file_path (string): path to csv file
         - images_dir_path (string): path to directory with all the images 
         - remote_sensing_dir_path (string): path to directory with all the remote sensing images
+        - data_split (string): train, validation, or test
         """
         self.csv_file = csv_file_path
         self.images_dir = images_dir_path
         self.remote_sensing_dir = remote_sensing_dir_path
         self.df = pd.read_csv(csv_file_path)
+        self.data_split = data_split
 
         self.ground_level_image_size = (256, 256)  # resize to this 
         
@@ -72,10 +74,26 @@ class CrispDataset(Dataset):
         remote_sensing_img_name = str(self.df.loc[idx, 'remote_sensing'])
         rs_path = os.path.join(self.remote_sensing_dir, remote_sensing_img_name)
 
+        # get uuid to search for in npz based on dataset
+        uuid_npy = None
+        if self.data_split == "train" or self.data_split == "validation":
+          uuid_npy = str(self.df.loc[idx, 'photo_uuid'])
+        elif self.data_split == "test":
+          uuid_npy = str(self.df.loc[idx, 'observation_uuid'])
+        else:
+           raise Exception("invalid data split")
+           
+
         try:
           rs_img_obj = np.load(rs_path)
           rs_files = rs_img_obj.files
-          rs_img = rs_img_obj[rs_files[0]]
+          # search for uuid, default is 0
+          npz_index = 0
+          for i in range(len(rs_files)):
+             if rs_files[i] == uuid_npy:
+                npz_index = i
+                continue
+          rs_img = rs_img_obj[rs_files[npz_index]]
           rs_img = rs_img[:3,:,:]  # (4, 256, 256) -- > (3, 256, 256)
         except:
           # generate random remote sensing image

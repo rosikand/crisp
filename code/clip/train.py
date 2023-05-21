@@ -54,7 +54,7 @@ class CrispExperiment(torchplate.experiment.Experiment):
         csv_path = os.path.join(base_path, "filtered.csv")
         images_dir_path = os.path.join(base_path, "images")
         remote_sensing_dir_path = os.path.join(base_path, "remote_sensing")
-        ds = data.CrispDataset(csv_path, images_dir_path, remote_sensing_dir_path)
+        ds = data.CrispDataset(csv_path, images_dir_path, remote_sensing_dir_path, "train")
         self.trainloader = torch.utils.data.DataLoader(ds, batch_size=10, shuffle=False)
 
 
