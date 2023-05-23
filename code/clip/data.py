@@ -86,14 +86,11 @@ class CrispDataset(Dataset):
 
         try:
           rs_img_obj = np.load(rs_path)
-          rs_files = rs_img_obj.files
-          # search for uuid, default is 0
-          npz_index = 0
-          for i in range(len(rs_files)):
-             if rs_files[i] == uuid_npy:
-                npz_index = i
-                continue
-          rs_img = rs_img_obj[rs_files[npz_index]]
+          # rs_files = rs_img_obj.files
+          if (uuid_npy in rs_img_obj):
+            rs_img = rs_img_obj[uuid_npy]
+          else:
+             rs_img = rs_img_obj[rs_img_obj.files[0]]
           rs_img = rs_img[:3,:,:]  # (4, 256, 256) -- > (3, 256, 256)
         except:
           # generate random remote sensing image
