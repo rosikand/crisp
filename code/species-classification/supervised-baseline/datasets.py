@@ -11,7 +11,7 @@ import os
 from PIL import Image
 import pandas as pd
 import numpy as np
-import rsbox  # custom package I wrote to handle some common ML tasks such as loading images into (C, H, W) form. 
+import rsbox 
 from rsbox import ml
 
 
