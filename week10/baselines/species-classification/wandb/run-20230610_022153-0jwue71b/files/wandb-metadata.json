@@ -1,0 +1,69 @@
+{
+    "os": "Linux-5.10.0-23-cloud-amd64-x86_64-with-glibc2.31",
+    "python": "3.10.10",
+    "heartbeatAt": "2023-06-10T02:21:55.869930",
+    "startedAt": "2023-06-10T02:21:53.695582",
+    "docker": null,
+    "cuda": null,
+    "args": [
+        "-log",
+        "-name",
+        "tmuxtryzerow"
+    ],
+    "state": "running",
+    "program": "/home/rsikand/crisp/week10/baselines/species-classification/train.py",
+    "codePath": "week10/baselines/species-classification/train.py",
+    "git": {
+        "remote": "https://github.com/rosikand/crisp.git",
+        "commit": "3cf33b70b3c5a8e77d7930c6ff39e87436107c96"
+    },
+    "email": "cs197.crisp@gmail.com",
+    "root": "/home/rsikand/crisp",
+    "host": "deeplearning-5-vm",
+    "username": "rsikand",
+    "executable": "/opt/conda/bin/python3",
+    "cpu_count": 2,
+    "cpu_count_logical": 4,
+    "cpu_freq": {
+        "current": 2000.188,
+        "min": 0.0,
+        "max": 0.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 2000.188,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2000.188,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2000.188,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2000.188,
+            "min": 0.0,
+            "max": 0.0
+        }
+    ],
+    "disk": {
+        "total": 98.18611526489258,
+        "used": 30.91900634765625
+    },
+    "gpu": "Tesla T4",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "Tesla T4",
+            "memory_total": 16106127360
+        }
+    ],
+    "memory": {
+        "total": 25.453369140625
+    }
+}

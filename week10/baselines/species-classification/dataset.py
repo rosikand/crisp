@@ -20,9 +20,8 @@ from tqdm import tqdm
 
 
 
-
 class INaturalistClassification(Dataset):
-    def __init__(self, csv_file_path, images_dir_path, label_map_path, image_resize=None, normalize=False):
+    def __init__(self, csv_file_path, images_dir_path, label_map_path, image_resize=(240, 180), normalize=False):
         """
         Initialize the dataset by reading the csv file and creating a mapping from image name to label. 
         Args:
@@ -43,7 +42,7 @@ class INaturalistClassification(Dataset):
         faulty_rows = self.df[~self.df['name'].isin(self.label_map.keys())]
         print("Number of rows not filtered correctly (should be 0): ", len(faulty_rows))
 
-        self.default_img_shape = (3, 224, 224)
+        self.default_img_shape = (3, 240, 180)
 
         self.image_resize = image_resize  # can be None 
         self.normalize = normalize
@@ -78,13 +77,22 @@ class INaturalistClassification(Dataset):
 
         try:
           image_array = ml.load_image(img_path, resize=self.image_resize, normalize=self.normalize)
+          image_array = torch.tensor(image_array, dtype=torch.float)
+          if image_array.shape[0] == 1:
+            image_array = image_array.repeat(3, 1, 1)
         except:
           print(f"The current image path ({img_path}) does not point to a valid file...., using random tensor.")
-          image_array = torch.randn(3, 256, 256)
+          image_array = torch.randn(3, 240, 180)
         
         # tensorize 
-        image_array = torch.tensor(image_array, dtype=torch.float)
+        
         label = torch.tensor(label)
+
+
+        # just do a shape triple check to avoid haulting training 
+        if image_array.shape != (3, 240, 180):
+          print("image array shape error... using random tensor")
+          image_array = torch.randn(3, 240, 180)
 
         return image_array, label
     
@@ -95,7 +103,7 @@ class INaturalistClassification(Dataset):
 # csv_file_path = "/mnt/disks/mountDir/metadata/filtered_validation.csv"
 # images_dir_path = "/mnt/disks/mountDir/validation/images"
 # label_map_path = "/mnt/disks/mountDir/metadata/label_map.json"
-# image_resize = None
+# image_resize = (240, 180)
 # normalize = True
 
 # ds = INaturalistClassification(
@@ -110,10 +118,11 @@ class INaturalistClassification(Dataset):
 # loader = DataLoader(ds, batch_size=1, shuffle=False)
 
 # progress_bar = tqdm(total=len(loader))
+# mishaper = 0
 # for i, data in enumerate(loader):
 #   x, y = data
 #   progress_bar.update(1)
-#   print(x.shape)
-#   print(y.shape)
-#   if i > 10:
-#     break
+#   if x[0].shape != (3, 240, 180):
+#     print(x.shape)
+#     mishaper += 1
+  

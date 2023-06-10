@@ -24,6 +24,7 @@ import rsbox
 from rsbox import ml, misc
 from torchvision import transforms
 import dataset
+import wandb
 
 
 # ----------------- Global config vars ----------------- #
@@ -40,11 +41,15 @@ label_map_path = "/mnt/disks/mountDir/metadata/label_map.json"
 # hyperparameters 
 image_resize = (240, 180)
 normalize = True
-batch_size = 64
+batch_size = 256
 
 # misc. 
 experiment_name = "default" + "-" + misc.timestamp()
 logger = None   # don't change... use argparse argument 
+
+print("batch_size: ", batch_size)
+print("normalize?: ", normalize)
+print("image_resize: ", image_resize)
 
 
 # ----------------- Training Experiments ----------------- #
@@ -172,15 +177,22 @@ class BaselineExperiment(torchplate.experiment.Experiment):
 
 
     def on_epoch_end(self):
-        val_acc = self.validate()
-        test_acc = self.test()
+        val_acc = self.validate()   
+        test_acc = self.test()     
         if self.wandb_logger is not None:
-            self.wandb_logger.log({"Test accuracy": test_acc})
             self.wandb_logger.log({"Validation accuracy": val_acc})
+            self.wandb_logger.log({"Test accuracy": test_acc})
+        self.save_weights()
+        print('--------------------------')
 
     
     def on_run_end(self):
         self.save_weights()
+        print('testing...')
+        test_acc = self.test()
+        if self.wandb_logger is not None:
+            self.wandb_logger.log({"Test accuracy": test_acc})
+
 
     def on_epoch_start(self):
         self.model.train()
@@ -203,8 +215,8 @@ def main(args):
     
     # train 
     exp = BaselineExperiment()
+    print(f"training for {args.epochs} epochs")
     exp.train(num_epochs=args.epochs, display_batch_loss=args.batch_loss)
-    exp.test()
 
 
 if __name__ == "__main__":
