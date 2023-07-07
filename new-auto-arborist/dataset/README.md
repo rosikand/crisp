@@ -1,0 +1,1 @@
+You need to have a `./data` folder containing the processed `.pkl` files to get this to work. But since this is > 1 gigabyte, I can't upload them all to GH. 
